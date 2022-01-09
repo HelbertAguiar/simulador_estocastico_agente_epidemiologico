@@ -1,54 +1,13 @@
 import numpy as np
-from names import get_first_name, get_last_name
 from collections import Counter
 from random import random, sample
+from .space import Space
+from .agent import Agent
 
 
 COVID_STAGES = {0: "healthy", 1: "incubating", 2: "infected",
                 3: "healed/immune", 4: "deceased"}
 IMMUNE_STATUS = [1, 2, 3, 4]
-
-
-class Agent:
-    def __init__(self, identification, status=None):
-        self.id = identification
-        self.status = status or 0
-        self.status_age = 0
-        self.name = self._random_name_generator(identification)
-        self.spaces_id = {"house": None, "work": None, "night": None}
-
-    @staticmethod
-    def _random_name_generator(agent_id):
-        return f"{get_first_name()}{get_last_name()}#{agent_id}"
-
-    def infect(self):
-        self.status = 1
-        self.status_age = 0
-
-    def __repr__(self):
-        return f"Agent {self.name} - Status: {self.status} (For {self.status_age} days)"
-
-
-class Space:
-    def __init__(self, denomination, capacity):
-        self.id = np.random.randint(low=1e12, high=9.9e12)
-        self.denomination = denomination
-        self.capacity = capacity
-        self.agents_id_list = []
-        self.agents_count = 0
-
-    def add_agent(self, agent):
-        if self.agents_count < self.capacity:
-            self.agents_id_list.append(agent.id)
-            agent.spaces_id[self.denomination] = self.id
-            self.agents_count = len(self.agents_id_list)
-            return True
-        return False
-
-    def __repr__(self):
-        return f"Space-> denomination: {self.denomination} | " \
-               + f"capacity: {self.capacity} | " \
-               + f"agents_count: {self.agents_count}"
 
 
 class Environment:
@@ -174,35 +133,5 @@ class Environment:
                + f"night_spaces: {len(self.night_spaces)}"
 
 
-class Simulation:
-    def __init__(self, environment, base_infection_risk=0.02, incubation_time=3,
-                 recovery_time=12, start_time=0):
-        self.time_position = start_time
-        self.environment = environment
-        self.base_infection_risk = base_infection_risk
-        self.incubation_time = incubation_time
-        self.recovery_time = recovery_time
-
-    def get_status(self):
-        return self.environment.get_status()
-
-    def step_time(self, print_status=False):
-        if not self.environment.is_populated:
-            return "Environment Not Populated Yet."
-        infected = 0
-        infected += self.environment.execute_house_routine(self.base_infection_risk)
-        infected += self.environment.execute_night_routine(self.base_infection_risk)
-        infected += self.environment.execute_night_routine(self.base_infection_risk)
-        recovered = self.environment.execute_end_of_day(self.incubation_time, self.recovery_time)
-        if print_status:
-            print(f"End of Day: {self.time_position}\n{infected} Agent(s) Infected.\n"
-                  f"{recovered} Agent(s) Recovered.\n{self.get_status()}")
-        self.time_position += 1
-
-
-env = Environment(max_agents=1000, max_house_spaces=220, max_work_spaces=110,
-                  max_night_spaces=110)
-env.populate()
-env.start_infection(100)
-sim = Simulation(environment=env, base_infection_risk=.02)
-sim.step_time(print_status=True)
+if __name__ == "__main__":
+    pass
