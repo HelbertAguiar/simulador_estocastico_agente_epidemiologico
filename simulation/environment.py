@@ -12,10 +12,12 @@ IMMUNE_STATUS = [1, 2, 3, 4]
 
 class Environment:
     def __init__(self, max_agents, max_house_spaces, max_work_spaces, max_night_spaces,
-                 max_agents_in_house=5, max_agents_in_work=10, max_agents_in_night=10):
+                 max_agents_in_house=5, max_agents_in_work=10, max_agents_in_night=10,
+                 incubation_phase=False):
         self.is_populated = False
         self.starting_agents = max_agents
         self.agents = []
+        self.incubation_phase = incubation_phase
         self.house_spaces = self._build_spaces("house", max_agents_in_house,
                                                max_house_spaces)
         self.work_spaces = self._build_spaces("work", max_agents_in_work, max_work_spaces)
@@ -76,7 +78,7 @@ class Environment:
                     if self.agents[p1].status == 2 \
                             and self.agents[p2].status == 0 \
                             and random() < infection_risk:
-                        self.agents[p2].infect()
+                        self.agents[p2].infect(self.incubation_phase)
                         infected += 1
         return infected
 

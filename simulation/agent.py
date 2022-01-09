@@ -13,8 +13,8 @@ class Agent:
     def _random_name_generator(agent_id):
         return f"{get_first_name()}{get_last_name()}#{agent_id}"
 
-    def infect(self):
-        self.status = 1
+    def infect(self, incubation_phase=False):
+        self.status = 1 if incubation_phase else 2
         self.status_age = 0
 
     def __repr__(self):
