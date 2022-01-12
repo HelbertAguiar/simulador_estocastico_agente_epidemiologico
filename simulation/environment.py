@@ -13,7 +13,7 @@ IMMUNE_STATUS = [1, 2, 3, 4]
 class Environment:
     def __init__(self, max_agents, max_house_spaces, max_work_spaces, max_night_spaces,
                  max_agents_in_house=5, max_agents_in_work=10, max_agents_in_night=10,
-                 incubation_phase=False):
+                 incubation_phase=True):
         self.is_populated = False
         self.starting_agents = max_agents
         self.agents = []
@@ -57,10 +57,10 @@ class Environment:
             self.agents.append(agent)
         self.is_populated = True
 
-    def start_infection(self, infected_agents):
+    def start_infection(self, infected_agents, skip_incubation=False):
         healthy_ids = sample(self.get_agents_ids_by_status(0), infected_agents)
         for i in healthy_ids:
-            self.agents[i].infect()
+            self.agents[i].infect(incubation_phase=(not skip_incubation))
 
     def get_status(self):
         status_list = [COVID_STAGES[agent.status] for agent in self.agents]
@@ -115,17 +115,20 @@ class Environment:
                         infected += 1
         return infected
 
-    def execute_end_of_day(self, incubation_time, recovery_time):
-        recovered = 0
+    def execute_end_of_day(self, incubation_time, recovery_time, deceased_risk):
+        recovered, deceased = 0, 0
         for agent in self.agents:
             if agent.status == 1 and agent.status_age >= incubation_time:
                 agent.status, agent.status_age = 2, 0
+            elif random() < deceased_risk and agent.status == 2:
+                agent.status, agent.status_age = 4, 0
+                deceased += 1
             elif agent.status == 2 and agent.status_age >= recovery_time:
                 agent.status, agent.status_age = 3, 0
                 recovered += 1
             else:
                 agent.status_age += 1
-        return recovered
+        return recovered, deceased
 
     def __repr__(self):
         return f"Enviroment-> starting_agents: {self.starting_agents} | " \
