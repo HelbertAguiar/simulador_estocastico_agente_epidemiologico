@@ -21,8 +21,5 @@ class Logger:
             spamwriter = csv.writer(csvfile, delimiter=",")
             spamwriter.writerow(vals)
 
-
-log = Logger("/home/eduarcher/faculdade/Proj. Multidisciplinar/covid_sim/test.csv",
-             ["a", "b"])
-
-log.write_to_log_file(["c", "n"])
+if __name__ == "__main__":
+    pass
