@@ -1,4 +1,3 @@
-from simulation import Environment, Simulation
 from time import sleep
 
 
