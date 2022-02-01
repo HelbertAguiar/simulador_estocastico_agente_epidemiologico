@@ -1,6 +1,6 @@
 import datetime
 from .logger import Logger
-
+import os
 
 class Simulation:
     def __init__(self, environment, base_infection_risk=.02, decease_risk=.005,
@@ -11,16 +11,17 @@ class Simulation:
         self.incubation_time = incubation_time
         self.recovery_time = recovery_time
         self.decease_risk = decease_risk
-        self.logger = self.start_logger()
+        self.logger, self.log_addr = self.start_logger()
 
     @staticmethod
     def start_logger():
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
         header = [
             "day", "total_healthy", "total_infected", "total_incubating", "total_deceased",
             "total_healed", "infected_today", "deceased_today", "recovered_today"
         ]
-        return Logger(f"./logs/log_{now}.csv", header)
+        log_addr = "." + os.path.sep + "logs" + os.path.sep + "log_" + now + ".csv"
+        return Logger(log_addr, header), log_addr
 
     def get_status(self):
         return self.environment.get_status()

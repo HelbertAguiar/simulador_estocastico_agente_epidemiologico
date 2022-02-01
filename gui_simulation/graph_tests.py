@@ -1,7 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
-df = pd.read_csv("logs/log_2022-01-20 18:23:11.csv")
+df = pd.read_csv("logs" + os.path.sep + "log_2022-01-31_18h15m20s.csv")
 
 f, axs = plt.subplots(2, 2, figsize=(12, 8))
 # f = plt.figure(figsize=(10, 3))
