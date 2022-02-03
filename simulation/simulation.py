@@ -3,8 +3,8 @@ from .logger import Logger
 import os
 
 class Simulation:
-    def __init__(self, environment, base_infection_risk=.02, decease_risk=.005,
-                 incubation_time=3, recovery_time=12, start_time=0, gui_simulation:object = None):
+    def __init__(self, environment, base_infection_risk = .02, decease_risk = .005,
+                 incubation_time = 3, recovery_time = 12, start_time = 0, gui_simulation:object = None):
         self.time_position = start_time
         self.environment = environment
         self.base_infection_risk = base_infection_risk
@@ -27,7 +27,7 @@ class Simulation:
     def get_status(self):
         return self.environment.get_status()
 
-    def step_time(self, print_status=False):
+    def step_time(self, print_status = False, dpg = None):
         if not self.environment.is_populated:
             return "Environment Not Populated Yet."
         infected = 0
@@ -50,6 +50,14 @@ class Simulation:
                   f"{deceased} Agent(s) Deceased.\n"
                   f"{curr_status}\n"
                   f"--------------------------------")
+        
+        dpg.set_value('status_log', 'Processing.. (Starting infection) - Day: ' + str(self.time_position)
+                        + ' - Healthy(Not contaminated): ' + str(curr_status["healthy"])
+                        + ' - Infected: ' + str(infected)
+                        + ' - Recovered: ' + str(recovered)
+                        + ' - Deceased: ' + str(deceased)
+                        + ' - Healed/Immune: ' + str(curr_status["healed/immune"])
+        )
 
 if __name__ == "__main__":
     pass
