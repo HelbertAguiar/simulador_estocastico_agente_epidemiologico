@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class Space:
     def __init__(self, denomination, capacity):
         self.id = np.random.randint(low=1e8, high=9.9e8)
@@ -21,7 +20,6 @@ class Space:
         return f"Space-> denomination: {self.denomination} | " \
                + f"capacity: {self.capacity} | " \
                + f"agents_count: {self.agents_count}"
-
 
 if __name__ == "__main__":
     pass

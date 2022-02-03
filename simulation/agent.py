@@ -1,6 +1,5 @@
 from names import get_first_name, get_last_name
 
-
 class Agent:
     def __init__(self, identification: int, status: int = None):
         self.id = identification

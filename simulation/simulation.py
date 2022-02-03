@@ -4,24 +4,25 @@ import os
 
 class Simulation:
     def __init__(self, environment, base_infection_risk=.02, decease_risk=.005,
-                 incubation_time=3, recovery_time=12, start_time=0):
+                 incubation_time=3, recovery_time=12, start_time=0, gui_simulation:object = None):
         self.time_position = start_time
         self.environment = environment
         self.base_infection_risk = base_infection_risk
         self.incubation_time = incubation_time
         self.recovery_time = recovery_time
         self.decease_risk = decease_risk
-        self.logger, self.log_addr = self.start_logger()
+        self.logger = self.start_logger(gui_simulation)
 
     @staticmethod
-    def start_logger():
+    def start_logger(gui_simulation:object = None):
         now = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
         header = [
             "day", "total_healthy", "total_infected", "total_incubating", "total_deceased",
             "total_healed", "infected_today", "deceased_today", "recovered_today"
         ]
         log_addr = "." + os.path.sep + "logs" + os.path.sep + "log_" + now + ".csv"
-        return Logger(log_addr, header), log_addr
+        gui_simulation.set_log_addr(log_addr)
+        return Logger(log_addr, header)
 
     def get_status(self):
         return self.environment.get_status()
@@ -49,7 +50,6 @@ class Simulation:
                   f"{deceased} Agent(s) Deceased.\n"
                   f"{curr_status}\n"
                   f"--------------------------------")
-
 
 if __name__ == "__main__":
     pass

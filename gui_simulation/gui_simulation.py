@@ -1,55 +1,154 @@
+from cProfile import label
+from multiprocessing.sharedctypes import Value
 import dearpygui.dearpygui as dpg
 import csv
-import os
+import simulation.simulation
+import simulation.environment 
 
 class Gui_simulation():
 
-    def __init__(self, log_addr, height=None, width=None, ):
-        self.log_addr = log_addr
+    # path to adress log
+    log_addr = None
+
+    # amount days to simulate
+    days_to_simulate = 365
+
+    # calculate values of each series on plot
+    x_total_days = None
+    y_total_healthy = None
+    y_total_infected = None
+    y_total_incubating = None
+    y_total_deceased = None
+    y_total_healed = None
+
+    # parameters of condition initials fo environment
+    max_agents = None
+    max_house_space = None
+    max_work_space = None
+    max_night_space = None
+    base_infection_risk = None
+    decease_risk = None
+
+    # parameters of plot
+    height = None
+    width = None
+    maximize = None
+    title = None
+    
+    def __init__(self, height = None, width = None, maximize: bool = False ):
         self.height = height
         self.width = width
-        self.title = 'Simulador da Evolucao do Agent Epidemiologic'
+        self.maximize = maximize
+        self.title = 'Simulator of Evolution of Agent Epidemiologic'
 
-    def generate(self):
-        
-        # create process to generate graph
+    def render_screen_initial(self):
+        # create "process" to generate graph
         dpg.create_context()
+        dpg.create_viewport(title = self.title, width = self.width, height = self.height)
 
-        # read the log with data and assign variable series_x e series_y
-        with open(self.log_addr, newline='') as csvfile:
-            rows = csv.DictReader(csvfile)
-            x_total_days, y_total_healthy, y_total_infected, \
-            y_total_incubating, y_total_deceased, y_total_healed = map(list, zip(*[self.split(row) for row in rows]))
+        # create btn START, RESET, INPUT_PARAMETERS
+        with dpg.window(label = 'simulation', tag = 'win1', no_title_bar = False, width = self.width, height = self.height, pos = [270, 0]):
+            dpg.add_button(label = 'Reset', callback = self.btn_reset_simulate, width = 500, height = 25, tag = 'btn_reset')
+            dpg.add_input_int(default_value = 365, label = 'days_to_simulate', tag = 'days_to_simulate', step=1)
+            dpg.add_input_int(default_value = 10000, label = 'max_agents', tag = 'max_agents', step=1000)
+            dpg.add_input_int(default_value = 2500, label = 'max_house_space', tag = 'max_house_space', step = 500)
+            dpg.add_input_int(default_value = 1000, label = 'max_work_space', tag = 'max_work_space', step = 500)
+            dpg.add_input_int(default_value = 750, label = 'max_night_space', tag = 'max_night_space', step = 500)
+            dpg.add_input_float(default_value = .025, label = 'base_infection_risk', tag = 'base_infection_risk', step = .001)
+            dpg.add_input_float(default_value = .015, label = 'decease_risk', tag = 'decease_risk', step = .001)
+            dpg.add_button(label = 'Start', callback = self.btn_start_simulate, width = 500, height = 25, tag='btn_start')
+            dpg.add_text(default_value = 'Disponivel', tag = 'status_log')
+            dpg.add_spacing(count = 5)
+            dpg.add_separator()
+            dpg.add_spacing(count = 5)
+            dpg.add_plot(label = "Result of model for studying the evolution of infection", height = self.height-500, width = self.width-100, tag = "plot")
+            dpg.add_plot_legend(parent = "plot")
+            dpg.add_plot_axis(dpg.mvXAxis, label = "Days", tag = "x_axis", parent = "plot")
+            dpg.add_plot_axis(dpg.mvYAxis, label = "Population", tag = "y_axis", parent = "plot")
 
-        # setting plot
-        with dpg.window(label="simulation", tag="win"):
-            with dpg.plot(label="Result of model for studying the evolution of contamination", height=self.height-100, width=self.width-100):
-                dpg.add_plot_legend()
-                dpg.add_plot_axis(dpg.mvXAxis, label="Days", tag="x_axis" )
-                dpg.add_plot_axis(dpg.mvYAxis, label="Population", tag="y_axis")
-                dpg.add_line_series(x_total_days, y_total_healthy, label="healthy", parent="y_axis", tag="series_healthy")
-                dpg.add_line_series(x_total_days, y_total_infected, label="infected", parent="y_axis", tag="series_infected")
-                dpg.add_line_series(x_total_days, y_total_incubating, label="incubating", parent="y_axis", tag="series_incubating")
-                dpg.add_line_series(x_total_days, y_total_deceased, label="deceased", parent="y_axis", tag="series_deceased")
-                dpg.add_line_series(x_total_days, y_total_healed, label="healed", parent="y_axis", tag="series_healed")
-
-        dpg.create_viewport(title=self.title, width=self.width, height=self.height)
         dpg.setup_dearpygui()
         dpg.show_viewport()
-
-        # show graph here
+        if self.maximize == True : dpg.maximize_viewport()
         dpg.start_dearpygui()
-        # while dpg.is_dearpygui_running():
-        #     dpg.render_dearpygui_frame()
-        
-        dpg.destroy_context()
 
+    def btn_start_simulate(self):
+        dpg.set_value('status_log', 'Processing. Creating individuals')
+        self.days_to_simulate = int(dpg.get_value('days_to_simulate'))
+        self.max_agents = dpg.get_value('max_agents')
+        self.max_house_space = dpg.get_value('max_house_space')
+        self.max_work_space = dpg.get_value('max_work_space')
+        self.max_night_space = dpg.get_value('max_night_space')
+        self.base_infection_risk = dpg.get_value('base_infection_risk')
+        self.decease_risk = dpg.get_value('decease_risk')
+
+        if dpg.does_item_exist('series_healthy') == True: dpg.delete_item('series_healthy')
+        if dpg.does_item_exist('series_infected') == True: dpg.delete_item('series_infected')
+        if dpg.does_item_exist('series_incubating') == True: dpg.delete_item('series_incubating')
+        if dpg.does_item_exist('series_deceased') == True: dpg.delete_item('series_deceased')
+        if dpg.does_item_exist('series_healed') == True: dpg.delete_item('series_healed')
+
+        env = simulation.environment.Environment(
+                        max_agents = self.max_agents, max_house_spaces = self.max_house_space,
+                        max_work_spaces = self.max_work_space, max_night_spaces = self.max_night_space)
+
+        env.populate()
+        env.start_infection(1, skip_incubation=True)
+        dpg.set_value('status_log', 'Processing. Starting infection')
+
+        sim = simulation.simulation.Simulation(
+                        environment = env, base_infection_risk = self.base_infection_risk,
+                        decease_risk = self.decease_risk, gui_simulation = self)
+
+        for _ in range(self.days_to_simulate):
+            sim.step_time(print_status = False)
+
+        print('finish simulation..')
+
+        with open(self.log_addr, newline='') as csvfile:
+            rows = csv.DictReader(csvfile)
+            self.x_total_days, self.y_total_healthy, self.y_total_infected, \
+            self.y_total_incubating, self.y_total_deceased, self.y_total_healed = map(list, zip(*[self.split(row) for row in rows]))
+
+        dpg.add_line_series(self.x_total_days, self.y_total_healthy, label = "healthy", parent="y_axis", tag="series_healthy")
+        dpg.fit_axis_data("x_axis")
+        dpg.fit_axis_data("y_axis")
+        dpg.add_line_series(self.x_total_days, self.y_total_infected, label = "infected", parent = "y_axis", tag = "series_infected")
+        dpg.add_line_series(self.x_total_days, self.y_total_incubating, label = "incubating", parent = "y_axis", tag = "series_incubating")
+        dpg.add_line_series(self.x_total_days, self.y_total_deceased, label = "deceased", parent = "y_axis", tag = "series_deceased")
+        dpg.add_line_series(self.x_total_days, self.y_total_healed, label = "healed", parent = "y_axis", tag = "series_healed")
+        dpg.set_value('status_log', 'Finalizado')
+
+    def btn_reset_simulate(self):
+        dpg.set_value('days_to_simulate', 365)
+        dpg.set_value('max_agents', 10000)
+        dpg.set_value('max_house_space', 2500)
+        dpg.set_value('max_work_space', 1000)
+        dpg.set_value('max_night_space', 750)
+        dpg.set_value('base_infection_risk', .025)
+        dpg.set_value('decease_risk', .015)
+        dpg.delete_item('series_healthy')
+        dpg.delete_item('series_infected')
+        dpg.delete_item('series_incubating')
+        dpg.delete_item('series_deceased')
+        dpg.delete_item('series_healed')
+        dpg.set_value('status_log', 'Disponivel')
+
+    def set_log_addr(self, addr):
+        self.log_addr = addr
+    
     def split(self, row):
-        return float(row['day']), float(row['total_healthy']), float(row['total_infected']), \
-            float(row['total_incubating']), float(row['total_deceased']), float(row['total_healed']), 
+        return float(row['day']), float(row['total_healthy']), \
+                    float(row['total_infected']), float(row['total_incubating']), \
+                        float(row['total_deceased']), float(row['total_healed']) 
+
+    def read_log_file(self):
+        with open(self.log_addr, newline = '') as csvfile:
+            rows = csv.DictReader(csvfile)
+
+            self.x_total_days, self.y_total_healthy, \
+                self.y_total_infected, self.y_total_incubating, \
+                    self.y_total_deceased, self.y_total_healed \
+                        = map(list, zip(*[self.split(row) for row in rows]))
 
 if __name__ == "__name__":
     pass
-
-# gui = Gui_simulation("logs" + os.path.sep + "log_2022-02-01_17h20m22s.csv", 800, 1000)
-# gui.generate()
