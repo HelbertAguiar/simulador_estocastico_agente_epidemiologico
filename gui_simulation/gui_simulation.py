@@ -1,5 +1,3 @@
-from cProfile import label
-from multiprocessing.sharedctypes import Value
 import dearpygui.dearpygui as dpg
 import csv
 import simulation.simulation
@@ -49,7 +47,7 @@ class Gui_simulation():
         # create btn START, RESET, INPUT_PARAMETERS
         with dpg.window(label = 'simulation', tag = 'win1', no_title_bar = False, width = self.width, height = self.height, pos = [180, 0]):
             dpg.add_button(label = 'Reset', callback = self.btn_reset_simulate, width = 250, height = 25, tag = 'btn_reset', pos = [362, 188])
-            dpg.add_input_int(default_value = 365, label = 'days_to_simulate', tag = 'days_to_simulate', step = 1)
+            dpg.add_input_int(default_value = 300, label = 'days_to_simulate', tag = 'days_to_simulate', step = 1)
             dpg.add_input_int(default_value = 10000, label = 'max_agents', tag = 'max_agents', step = 1000)
             dpg.add_input_int(default_value = 2500, label = 'max_house_space', tag = 'max_house_space', step = 500)
             dpg.add_input_int(default_value = 1000, label = 'max_work_space', tag = 'max_work_space', step = 500)
@@ -73,53 +71,40 @@ class Gui_simulation():
         dpg.start_dearpygui()
 
     def btn_start_simulate(self):
-        self.days_to_simulate = int(dpg.get_value('days_to_simulate'))
-        self.max_agents = dpg.get_value('max_agents')
-        self.max_house_space = dpg.get_value('max_house_space')
-        self.max_work_space = dpg.get_value('max_work_space')
-        self.max_night_space = dpg.get_value('max_night_space')
-        self.base_infection_risk = dpg.get_value('base_infection_risk')
-        self.decease_risk = dpg.get_value('decease_risk')
 
-        if dpg.does_item_exist('series_healthy') == True: dpg.delete_item('series_healthy')
-        if dpg.does_item_exist('series_infected') == True: dpg.delete_item('series_infected')
-        if dpg.does_item_exist('series_incubating') == True: dpg.delete_item('series_incubating')
-        if dpg.does_item_exist('series_deceased') == True: dpg.delete_item('series_deceased')
-        if dpg.does_item_exist('series_healed') == True: dpg.delete_item('series_healed')
+        self.plot_delete_series_data()
+        self.get_parameters_screen()
 
         env = simulation.environment.Environment(
                         max_agents = self.max_agents, max_house_spaces = self.max_house_space,
                         max_work_spaces = self.max_work_space, max_night_spaces = self.max_night_space,
-                        dpg = dpg)
+                        dpg = dpg )
 
-        dpg.set_value('status_log', 'Processing.. (Creating individuals)')
         env.populate()
-        dpg.set_value('status_log', 'Processing.. (Starting infection)')
         env.start_infection(1, skip_incubation=True)
 
         sim = simulation.simulation.Simulation(
                         environment = env, base_infection_risk = self.base_infection_risk,
                         decease_risk = self.decease_risk, gui_simulation = self)
-
+        
+        counter_steps_to_plot_new_series_data = 0
+        step_days_to_plot_new_series_data = 10
         for _ in range(self.days_to_simulate):
             sim.step_time(print_status = False, dpg = dpg)
+            counter_steps_to_plot_new_series_data += 1
+            if counter_steps_to_plot_new_series_data == step_days_to_plot_new_series_data:
+                self.read_log_file()
+                self.plot_delete_series_data()
+                self.plot_add_series_data()
+                counter_steps_to_plot_new_series_data = 0
 
         print('Completed simulation..')
 
-        with open(self.log_addr, newline='') as csvfile:
-            rows = csv.DictReader(csvfile)
-            self.x_total_days, self.y_total_healthy, self.y_total_infected, \
-            self.y_total_incubating, self.y_total_deceased, self.y_total_healed = map(list, zip(*[self.split(row) for row in rows]))
-
-        dpg.add_line_series(self.x_total_days, self.y_total_healthy, label = "healthy", parent = "y_axis", tag = "series_healthy")
-        dpg.fit_axis_data("x_axis")
-        dpg.fit_axis_data("y_axis")
-        dpg.add_line_series(self.x_total_days, self.y_total_infected, label = "infected", parent = "y_axis", tag = "series_infected")
-        dpg.add_line_series(self.x_total_days, self.y_total_incubating, label = "incubating", parent = "y_axis", tag = "series_incubating")
-        dpg.add_line_series(self.x_total_days, self.y_total_deceased, label = "deceased", parent = "y_axis", tag = "series_deceased")
-        dpg.add_line_series(self.x_total_days, self.y_total_healed, label = "healed", parent = "y_axis", tag = "series_healed")
-        status_log = str(dpg.get_value('status_log'))
-        status_log = status_log.replace('Processing.. (Starting infection)', 'Completed simulation')
+        self.read_log_file()
+        self.plot_delete_series_data()
+        self.plot_add_series_data()
+        
+        status_log = str(dpg.get_value('status_log')).replace('Processing.. (Starting infection)', 'Completed simulation')
         dpg.set_value('status_log', status_log)
 
     def btn_reset_simulate(self):
@@ -137,14 +122,6 @@ class Gui_simulation():
         dpg.delete_item('series_healed')
         dpg.set_value('status_log', 'Waiting start')
 
-    def set_log_addr(self, addr):
-        self.log_addr = addr
-    
-    def split(self, row):
-        return float(row['day']), float(row['total_healthy']), \
-                    float(row['total_infected']), float(row['total_incubating']), \
-                        float(row['total_deceased']), float(row['total_healed']) 
-
     def read_log_file(self):
         with open(self.log_addr, newline = '') as csvfile:
             rows = csv.DictReader(csvfile)
@@ -153,6 +130,39 @@ class Gui_simulation():
                 self.y_total_infected, self.y_total_incubating, \
                     self.y_total_deceased, self.y_total_healed \
                         = map(list, zip(*[self.split(row) for row in rows]))
+
+    def plot_add_series_data(self):
+        dpg.add_line_series(self.x_total_days, self.y_total_healthy, label = "healthy", parent = "y_axis", tag = "series_healthy")
+        dpg.fit_axis_data("x_axis")
+        dpg.fit_axis_data("y_axis")
+        dpg.add_line_series(self.x_total_days, self.y_total_infected, label = "infected", parent = "y_axis", tag = "series_infected")
+        dpg.add_line_series(self.x_total_days, self.y_total_incubating, label = "incubating", parent = "y_axis", tag = "series_incubating")
+        dpg.add_line_series(self.x_total_days, self.y_total_deceased, label = "deceased", parent = "y_axis", tag = "series_deceased")
+        dpg.add_line_series(self.x_total_days, self.y_total_healed, label = "healed", parent = "y_axis", tag = "series_healed")
+    
+    def plot_delete_series_data(self):
+        if dpg.does_item_exist('series_healthy') == True: dpg.delete_item('series_healthy')
+        if dpg.does_item_exist('series_infected') == True: dpg.delete_item('series_infected')
+        if dpg.does_item_exist('series_incubating') == True: dpg.delete_item('series_incubating')
+        if dpg.does_item_exist('series_deceased') == True: dpg.delete_item('series_deceased')
+        if dpg.does_item_exist('series_healed') == True: dpg.delete_item('series_healed')
+
+    def get_parameters_screen(self):
+        self.days_to_simulate = int(dpg.get_value('days_to_simulate'))
+        self.max_agents = dpg.get_value('max_agents')
+        self.max_house_space = dpg.get_value('max_house_space')
+        self.max_work_space = dpg.get_value('max_work_space')
+        self.max_night_space = dpg.get_value('max_night_space')
+        self.base_infection_risk = dpg.get_value('base_infection_risk')
+        self.decease_risk = dpg.get_value('decease_risk')
+
+    def set_log_addr(self, addr):
+        self.log_addr = addr
+    
+    def split(self, row):
+        return float(row['day']), float(row['total_healthy']), \
+                    float(row['total_infected']), float(row['total_incubating']), \
+                        float(row['total_deceased']), float(row['total_healed']) 
 
 if __name__ == "__name__":
     pass
