@@ -32,6 +32,9 @@ class Gui_simulation():
     width = None
     maximize = None
     title = None
+
+    # rate update frame/plot
+    RATE_UPDATE_FRAME = 7
     
     def __init__(self, height = None, width = None, maximize: bool = False ):
         self.height = height
@@ -60,7 +63,8 @@ class Gui_simulation():
             dpg.add_spacer(height = 5)
             dpg.add_separator()
             dpg.add_spacer(height = 5)
-            dpg.add_plot(label = "Result of model of evolution of infection", height = self.height-500, width = self.width-100, tag = "plot")
+            dpg.add_plot(label = "Result of model of evolution of infection", 
+                                        height = self.height-500, width = self.width-100, tag = "plot", query = True)
             dpg.add_plot_legend(parent = "plot")
             dpg.add_plot_axis(dpg.mvXAxis, label = "Days", tag = "x_axis", parent = "plot")
             dpg.add_plot_axis(dpg.mvYAxis, label = "Population", tag = "y_axis", parent = "plot")
@@ -87,16 +91,17 @@ class Gui_simulation():
                         environment = env, base_infection_risk = self.base_infection_risk,
                         decease_risk = self.decease_risk, gui_simulation = self)
         
+        self.set_color_series()
         counter_steps_to_plot_new_series_data = 0
-        step_days_to_plot_new_series_data = 10
+        step_days_to_plot_new_series_data = self.RATE_UPDATE_FRAME # update frame|plot each week ( 7 days )
         for _ in range(self.days_to_simulate):
             sim.step_time(print_status = False, dpg = dpg)
             counter_steps_to_plot_new_series_data += 1
             if counter_steps_to_plot_new_series_data == step_days_to_plot_new_series_data:
+                counter_steps_to_plot_new_series_data = 0
                 self.read_log_file()
                 self.plot_delete_series_data()
                 self.plot_add_series_data()
-                counter_steps_to_plot_new_series_data = 0
 
         print('Completed simulation..')
 
@@ -132,6 +137,7 @@ class Gui_simulation():
                         = map(list, zip(*[self.split(row) for row in rows]))
 
     def plot_add_series_data(self):
+        
         dpg.add_line_series(self.x_total_days, self.y_total_healthy, label = "healthy", parent = "y_axis", tag = "series_healthy")
         dpg.fit_axis_data("x_axis")
         dpg.fit_axis_data("y_axis")
@@ -139,7 +145,33 @@ class Gui_simulation():
         dpg.add_line_series(self.x_total_days, self.y_total_incubating, label = "incubating", parent = "y_axis", tag = "series_incubating")
         dpg.add_line_series(self.x_total_days, self.y_total_deceased, label = "deceased", parent = "y_axis", tag = "series_deceased")
         dpg.add_line_series(self.x_total_days, self.y_total_healed, label = "healed", parent = "y_axis", tag = "series_healed")
+        dpg.bind_item_theme("series_healthy", "green")
+        dpg.bind_item_theme("series_infected", "yellow")
+        dpg.bind_item_theme("series_incubating", "gray")
+        dpg.bind_item_theme("series_deceased", "red")
+        dpg.bind_item_theme("series_healed", "blue")
+
+    def set_color_series(self):
+        with dpg.theme(tag = "green"):
+            with dpg.theme_component(dpg.mvLineSeries):
+                dpg.add_theme_color(dpg.mvPlotCol_Line, (0, 255, 0), category = dpg.mvThemeCat_Plots)
+        
+        with dpg.theme(tag = "red"):
+            with dpg.theme_component(dpg.mvLineSeries):
+                dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 0, 0), category  = dpg.mvThemeCat_Plots)
+
+        with dpg.theme(tag = "blue"):
+            with dpg.theme_component(dpg.mvLineSeries):
+                dpg.add_theme_color(dpg.mvPlotCol_Line, (0, 0, 255), category = dpg.mvThemeCat_Plots)
     
+        with dpg.theme(tag = "gray"):
+            with dpg.theme_component(dpg.mvLineSeries):
+                dpg.add_theme_color(dpg.mvPlotCol_Line, (128, 128, 128), category = dpg.mvThemeCat_Plots)
+
+        with dpg.theme(tag = "yellow"):
+            with dpg.theme_component(dpg.mvLineSeries):
+                dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 255, 0), category = dpg.mvThemeCat_Plots)
+
     def plot_delete_series_data(self):
         if dpg.does_item_exist('series_healthy') == True: dpg.delete_item('series_healthy')
         if dpg.does_item_exist('series_infected') == True: dpg.delete_item('series_infected')
