@@ -1,7 +1,8 @@
 import dearpygui.dearpygui as dpg
 import csv
 import simulation.simulation
-import simulation.environment 
+import simulation.environment
+import timeit
 
 class Gui_simulation():
 
@@ -10,6 +11,9 @@ class Gui_simulation():
 
     # amount days to simulate
     days_to_simulate = 365
+
+    # add variable to run "set_color_series()" only time on execution
+    first_execution = False
 
     # calculate values of each series on plot
     x_total_days = None
@@ -75,7 +79,7 @@ class Gui_simulation():
         dpg.start_dearpygui()
 
     def btn_start_simulate(self):
-
+        time_start = timeit.default_timer()
         self.plot_delete_series_data()
         self.get_parameters_screen()
 
@@ -91,7 +95,7 @@ class Gui_simulation():
                         environment = env, base_infection_risk = self.base_infection_risk,
                         decease_risk = self.decease_risk, gui_simulation = self)
         
-        self.set_color_series()
+        if self.first_execution == False : self.set_color_series()
         counter_steps_to_plot_new_series_data = 0
         step_days_to_plot_new_series_data = self.RATE_UPDATE_FRAME # update frame|plot each week ( 7 days )
         for _ in range(self.days_to_simulate):
@@ -108,8 +112,11 @@ class Gui_simulation():
         self.read_log_file()
         self.plot_delete_series_data()
         self.plot_add_series_data()
+
+        time_stop = timeit.default_timer()
         
         status_log = str(dpg.get_value('status_log')).replace('Processing.. (Starting infection)', 'Completed simulation')
+        status_log = status_log + ' || Time Execution:' + str(round(time_stop - time_start, 0)) + ' seconds'
         dpg.set_value('status_log', status_log)
 
     def btn_reset_simulate(self):
@@ -137,7 +144,6 @@ class Gui_simulation():
                         = map(list, zip(*[self.split(row) for row in rows]))
 
     def plot_add_series_data(self):
-        
         dpg.add_line_series(self.x_total_days, self.y_total_healthy, label = "healthy", parent = "y_axis", tag = "series_healthy")
         dpg.fit_axis_data("x_axis")
         dpg.fit_axis_data("y_axis")
@@ -152,6 +158,7 @@ class Gui_simulation():
         dpg.bind_item_theme("series_healed", "blue")
 
     def set_color_series(self):
+        self.first_execution = True
         with dpg.theme(tag = "green"):
             with dpg.theme_component(dpg.mvLineSeries):
                 dpg.add_theme_color(dpg.mvPlotCol_Line, (0, 255, 0), category = dpg.mvThemeCat_Plots)
