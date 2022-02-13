@@ -4,8 +4,8 @@ import simulation.simulation
 import simulation.environment
 import timeit
 
-class Gui_simulation():
 
+class Gui_simulation():
     # path to adress log
     log_addr = None
 
@@ -180,11 +180,11 @@ class Gui_simulation():
                 dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 255, 0), category = dpg.mvThemeCat_Plots)
 
     def plot_delete_series_data(self):
-        if dpg.does_item_exist('series_healthy') == True: dpg.delete_item('series_healthy')
-        if dpg.does_item_exist('series_infected') == True: dpg.delete_item('series_infected')
-        if dpg.does_item_exist('series_incubating') == True: dpg.delete_item('series_incubating')
-        if dpg.does_item_exist('series_deceased') == True: dpg.delete_item('series_deceased')
-        if dpg.does_item_exist('series_healed') == True: dpg.delete_item('series_healed')
+        if dpg.does_item_exist('series_healthy'): dpg.delete_item('series_healthy')
+        if dpg.does_item_exist('series_infected'): dpg.delete_item('series_infected')
+        if dpg.does_item_exist('series_incubating'): dpg.delete_item('series_incubating')
+        if dpg.does_item_exist('series_deceased'): dpg.delete_item('series_deceased')
+        if dpg.does_item_exist('series_healed'): dpg.delete_item('series_healed')
 
     def get_parameters_screen(self):
         self.days_to_simulate = int(dpg.get_value('days_to_simulate'))
@@ -202,6 +202,7 @@ class Gui_simulation():
         return float(row['day']), float(row['total_healthy']), \
                     float(row['total_infected']), float(row['total_incubating']), \
                         float(row['total_deceased']), float(row['total_healed']) 
+
 
 if __name__ == "__name__":
     pass

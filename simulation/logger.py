@@ -1,6 +1,7 @@
 import csv
 from typing import List
 
+
 class Logger:
     def __init__(self, log_addr: str, header: List[str], reset_log_file: bool = True):
         self.log_addr = log_addr

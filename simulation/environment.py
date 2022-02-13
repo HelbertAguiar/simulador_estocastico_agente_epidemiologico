@@ -12,8 +12,8 @@ IMMUNE_STATUS = [1, 2, 3, 4]
 
 class Environment:
     def __init__(self, max_agents, max_house_spaces, max_work_spaces, max_night_spaces,
-                 max_agents_in_house = 5, max_agents_in_work = 20, max_agents_in_night = 30,
-                 incubation_phase = True, dpg = None):
+                 max_agents_in_house=5, max_agents_in_work=20, max_agents_in_night=30,
+                 incubation_phase=True, dpg=None):
         self.dpg = dpg
         self.is_populated = False
         self.starting_agents = max_agents

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Space:
     def __init__(self, denomination, capacity):
         self.id = np.random.randint(low=1e8, high=9.9e8)
