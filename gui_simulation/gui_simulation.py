@@ -137,11 +137,10 @@ class Gui_simulation():
     def read_log_file(self):
         with open(self.log_addr, newline = '') as csvfile:
             rows = csv.DictReader(csvfile)
-
             self.x_total_days, self.y_total_healthy, \
                 self.y_total_infected, self.y_total_incubating, \
-                    self.y_total_deceased, self.y_total_healed \
-                        = map(list, zip(*[self.split(row) for row in rows]))
+                self.y_total_deceased, self.y_total_healed, self.y_total_hospitalized \
+                = map(list, zip(*[self.split(row) for row in rows]))
 
     def plot_add_series_data(self):
         dpg.add_line_series(self.x_total_days, self.y_total_healthy, label = "healthy", parent = "y_axis", tag = "series_healthy")
@@ -165,7 +164,7 @@ class Gui_simulation():
         
         with dpg.theme(tag = "red"):
             with dpg.theme_component(dpg.mvLineSeries):
-                dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 0, 0), category  = dpg.mvThemeCat_Plots)
+                dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 0, 0), category = dpg.mvThemeCat_Plots)
 
         with dpg.theme(tag = "blue"):
             with dpg.theme_component(dpg.mvLineSeries):
@@ -200,8 +199,9 @@ class Gui_simulation():
     
     def split(self, row):
         return float(row['day']), float(row['total_healthy']), \
-                    float(row['total_infected']), float(row['total_incubating']), \
-                        float(row['total_deceased']), float(row['total_healed']) 
+               float(row['total_infected']), float(row['total_incubating']), \
+               float(row['total_deceased']), float(row['total_healed']), \
+               float(row['total_hospitalized'])
 
 
 if __name__ == "__name__":

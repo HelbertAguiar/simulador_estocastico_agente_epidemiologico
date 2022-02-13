@@ -6,8 +6,8 @@ from .agent import Agent
 
 
 COVID_STAGES = {0: "healthy", 1: "incubating", 2: "infected",
-                3: "healed/immune", 4: "deceased"}
-IMMUNE_STATUS = [1, 2, 3, 4]
+                3: "healed/immune", 4: "deceased", 5: "hospitalized"}
+IMMUNE_STATUS = [1, 2, 3, 4, 5]
 
 
 class Environment:
@@ -117,16 +117,18 @@ class Environment:
                         infected += 1
         return infected
 
-    def execute_end_of_day(self, min_incubation_time, min_recovery_time, deceased_risk):
+    def execute_end_of_day(self, min_incubation_time, min_recovery_time, deceased_risk,
+                           hosp_chance):
         recovered, deceased = 0, 0
         for agent in self.agents:
             if agent.status == 1 and agent.status_age >= min_incubation_time \
                     and np.random.normal() > 1.3:
-                agent.status, agent.status_age = 2, 0
-            elif agent.status == 2 and random() < (deceased_risk * (1+agent.risk_factor)):
+                agent.status, agent.status_age = (5, 0) if random() < hosp_chance else (2, 0)
+            elif (agent.status == 2 and random() < (deceased_risk * (1+agent.risk_factor))) \
+                    or (agent.status == 5 and random() < ((deceased_risk)/2 * (1+agent.risk_factor))):
                 agent.status, agent.status_age = 4, 0
                 deceased += 1
-            elif agent.status == 2 and agent.status_age >= min_recovery_time \
+            elif agent.status in [2, 5] and agent.status_age >= min_recovery_time \
                     and np.random.normal() > 1.3:
                 agent.status, agent.status_age = 3, 0
                 recovered += 1

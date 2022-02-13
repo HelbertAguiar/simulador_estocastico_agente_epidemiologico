@@ -6,7 +6,8 @@ import os
 
 class Simulation:
     def __init__(self, environment, base_infection_risk=.02, decease_risk=.005,
-                 min_incubation_time=2, min_recovery_time=7, start_time=0, gui_simulation=None):
+                 min_incubation_time=2, min_recovery_time=7, start_time=0,
+                 gui_simulation=None, hospitalization_chance=.3):
         self.time_position = start_time
         self.environment = environment
         self.base_infection_risk = base_infection_risk
@@ -14,13 +15,15 @@ class Simulation:
         self.min_recovery_time = min_recovery_time
         self.decease_risk = decease_risk
         self.logger = self.start_logger(gui_simulation)
+        self.hospitalization_chance = hospitalization_chance
 
     @staticmethod
     def start_logger(gui_simulation: object = None):
         now = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
         header = [
             "day", "total_healthy", "total_infected", "total_incubating", "total_deceased",
-            "total_healed", "infected_today", "deceased_today", "recovered_today", "r0"
+            "total_healed", "total_hospitalized", "infected_today", "deceased_today",
+            "recovered_today"
         ]
         log_addr = "." + os.path.sep + "logs" + os.path.sep + "log_" + now + ".csv"
         gui_simulation.set_log_addr(log_addr)
@@ -37,16 +40,15 @@ class Simulation:
         infected += self.environment.execute_night_routine(self.base_infection_risk)
         infected += self.environment.execute_night_routine(self.base_infection_risk)
         recovered, deceased = self.environment.execute_end_of_day(
-            self.min_incubation_time, self.min_recovery_time, self.decease_risk)
+            self.min_incubation_time, self.min_recovery_time, self.decease_risk,
+            self.hospitalization_chance)
         curr_status = self.get_status()
-
-        R0 = 1 * ((np.log(self.environment.starting_agents - 1) - np.log(curr_status["healthy"]))
-                  / (self.environment.starting_agents - curr_status["healthy"] - 0))
 
         self.logger.write_to_log_file(
             [self.time_position, curr_status["healthy"], curr_status["infected"],
              curr_status["incubating"], curr_status["deceased"],
-             curr_status["healed/immune"], infected, deceased, recovered, R0]
+             curr_status["healed/immune"],curr_status["hospitalized"],
+             infected, deceased, recovered]
         )
         self.time_position += 1
         if print_status:
