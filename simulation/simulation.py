@@ -1,19 +1,17 @@
 import datetime
-
 import numpy as np
-
 from .logger import Logger
 import os
 
 
 class Simulation:
     def __init__(self, environment, base_infection_risk=.02, decease_risk=.005,
-                 incubation_time=3, recovery_time=12, start_time=0, gui_simulation=None):
+                 min_incubation_time=2, min_recovery_time=7, start_time=0, gui_simulation=None):
         self.time_position = start_time
         self.environment = environment
         self.base_infection_risk = base_infection_risk
-        self.incubation_time = incubation_time
-        self.recovery_time = recovery_time
+        self.min_incubation_time = min_incubation_time
+        self.min_recovery_time = min_recovery_time
         self.decease_risk = decease_risk
         self.logger = self.start_logger(gui_simulation)
 
@@ -39,10 +37,11 @@ class Simulation:
         infected += self.environment.execute_night_routine(self.base_infection_risk)
         infected += self.environment.execute_night_routine(self.base_infection_risk)
         recovered, deceased = self.environment.execute_end_of_day(
-            self.incubation_time, self.recovery_time, self.decease_risk)
+            self.min_incubation_time, self.min_recovery_time, self.decease_risk)
         curr_status = self.get_status()
 
-        R0 = 1 * ((np.log(self.environment.starting_agents - 1) - np.log(curr_status["healthy"])) / (self.environment.starting_agents - curr_status["healthy"] - 0))
+        R0 = 1 * ((np.log(self.environment.starting_agents - 1) - np.log(curr_status["healthy"]))
+                  / (self.environment.starting_agents - curr_status["healthy"] - 0))
 
         self.logger.write_to_log_file(
             [self.time_position, curr_status["healthy"], curr_status["infected"],

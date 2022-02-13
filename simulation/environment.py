@@ -117,15 +117,17 @@ class Environment:
                         infected += 1
         return infected
 
-    def execute_end_of_day(self, incubation_time, recovery_time, deceased_risk):
+    def execute_end_of_day(self, min_incubation_time, min_recovery_time, deceased_risk):
         recovered, deceased = 0, 0
         for agent in self.agents:
-            if agent.status == 1 and agent.status_age >= incubation_time:
+            if agent.status == 1 and agent.status_age >= min_incubation_time \
+                    and np.random.normal() > 1.3:
                 agent.status, agent.status_age = 2, 0
-            elif random() < deceased_risk and agent.status == 2:
+            elif agent.status == 2 and random() < (deceased_risk * (1+agent.risk_factor)):
                 agent.status, agent.status_age = 4, 0
                 deceased += 1
-            elif agent.status == 2 and agent.status_age >= recovery_time:
+            elif agent.status == 2 and agent.status_age >= min_recovery_time \
+                    and np.random.normal() > 1.3:
                 agent.status, agent.status_age = 3, 0
                 recovered += 1
             else:

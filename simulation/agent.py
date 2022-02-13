@@ -1,4 +1,5 @@
 from names import get_first_name, get_last_name
+import numpy as np
 
 
 class Agent:
@@ -7,6 +8,7 @@ class Agent:
         self.status = status or 0
         self.status_age = 0
         self.name = self._random_name_generator(identification)
+        self.risk_factor = min(np.random.chisquare(3.5) / 15, 1.0)
         self.spaces_id = {"house": None, "work": None, "night": None}
 
     @staticmethod
