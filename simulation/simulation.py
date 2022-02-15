@@ -46,7 +46,7 @@ class Simulation:
         self.logger.write_to_log_file(
             [self.time_position, curr_status["healthy"], curr_status["infected"],
              curr_status["incubating"], curr_status["deceased"],
-             curr_status["healed/immune"],curr_status["hospitalized"],
+             curr_status["healed/immune"], curr_status["hospitalized"],
              infected, deceased, recovered]
         )
         self.time_position += 1
@@ -63,6 +63,7 @@ class Simulation:
                         + ' - Infected: ' + str(infected)
                         + ' - Recovered: ' + str(recovered)
                         + ' - Deceased: ' + str(deceased)
+                        + ' - Hospit.: ' + str(curr_status["hospitalized"])
                         + ' - Healed/Immune: ' + str(curr_status["healed/immune"])
         )
 

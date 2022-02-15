@@ -136,7 +136,7 @@ class Gui_simulation():
 
         time_stop = timeit.default_timer()
         
-        status_log = str(dpg.get_value('status_log')).replace('Processing.. (Starting infection)', 'Completed simulation')
+        status_log = 'Completed simulation. ' + str(env.get_status()).replace('Counter({', 'Total(').replace(')}','')
         status_log = status_log + ' || Time Execution:' + str(round(time_stop - time_start, 0)) + ' seconds'
         dpg.set_value('status_log', status_log)
 
