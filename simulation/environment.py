@@ -68,7 +68,7 @@ class Environment:
         status_list = [COVID_STAGES[agent.status] for agent in self.agents]
         return Counter(status_list)
 
-    def execute_house_routine(self, infection_risk):
+    def execute_house_routine(self, rate_infection):
         infected = 0
         for house in self.house_spaces:
             for p1 in house.agents_id_list:
@@ -79,12 +79,12 @@ class Environment:
                         continue
                     if self.agents[p1].status == 2 \
                             and self.agents[p2].status == 0 \
-                            and random() < infection_risk:
+                            and random() < rate_infection:
                         self.agents[p2].infect(self.incubation_phase)
                         infected += 1
         return infected
 
-    def execute_work_routine(self, infection_risk):
+    def execute_work_routine(self, rate_infection):
         infected = 0
         for work in self.work_spaces:
             for p1 in work.agents_id_list:
@@ -95,12 +95,12 @@ class Environment:
                         continue
                     if self.agents[p1].status == 2 \
                             and self.agents[p2].status == 0 \
-                            and random() < infection_risk:
+                            and random() < rate_infection:
                         self.agents[p2].infect()
                         infected += 1
         return infected
 
-    def execute_night_routine(self, infection_risk):
+    def execute_night_routine(self, rate_infection):
         # TODO: Maybe the night routine could change some nights, or even not happen for some
         infected = 0
         for night in self.night_spaces:
@@ -112,7 +112,7 @@ class Environment:
                         continue
                     if self.agents[p1].status == 2 \
                             and self.agents[p2].status == 0 \
-                            and random() < infection_risk:
+                            and random() < rate_infection:
                         self.agents[p2].infect()
                         infected += 1
         return infected

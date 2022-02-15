@@ -29,8 +29,19 @@ class Gui_simulation():
     max_house_space = None
     max_work_space = None
     max_night_space = None
-    base_infection_risk = None
-    decease_risk = None
+    max_agents_in_house = None
+    max_agents_in_work = None
+    max_agents_in_night = None
+    
+    # below parameters epidemiologic
+    # gama = duration of illness
+    # sigma = estimated incubation period of the disease
+    min_recovery_time = None
+    min_incubation_time = None
+    # parameters relationship among people (interactions)
+    # beta = the rate at which infectious people interact with others
+    rate_infection = None
+    rate_decease = None
 
     # parameters of plot
     height = None
@@ -54,14 +65,19 @@ class Gui_simulation():
 
         # create btn START, RESET, INPUT_PARAMETERS
         with dpg.window(label = 'simulation', tag = 'win1', no_title_bar = False, width = self.width, height = self.height, pos = [180, 0]):
-            dpg.add_button(label = 'Reset', callback = self.btn_reset_simulate, width = 250, height = 25, tag = 'btn_reset', pos = [362, 188])
-            dpg.add_input_int(default_value = 300, label = 'days_to_simulate', tag = 'days_to_simulate', step = 1)
-            dpg.add_input_int(default_value = 1000, label = 'max_agents', tag = 'max_agents', step = 1000)
-            dpg.add_input_int(default_value = 250, label = 'max_house_space', tag = 'max_house_space', step = 500)
-            dpg.add_input_int(default_value = 100, label = 'max_work_space', tag = 'max_work_space', step = 500)
-            dpg.add_input_int(default_value = 75, label = 'max_night_space', tag = 'max_night_space', step = 500)
-            dpg.add_input_float(default_value = .025, label = 'base_infection_risk', tag = 'base_infection_risk', step = .001)
-            dpg.add_input_float(default_value = .013, label = 'decease_risk', tag = 'decease_risk', step = .001)
+            dpg.add_button(label = 'Reset', callback = self.btn_reset_simulate, width = 250, height = 25, tag = 'btn_reset', pos = [492, 303])
+            dpg.add_input_int(default_value = 180, label = 'days_to_simulate', tag = 'days_to_simulate', step = 1)
+            dpg.add_input_int(default_value = 10000, label = 'max_agents', tag = 'max_agents', step = 1000)
+            dpg.add_input_int(default_value = 2500, label = 'max_house_space', tag = 'max_house_space', step = 500)
+            dpg.add_input_int(default_value = 4, label = 'max_agents_in_house', tag = 'max_agents_in_house', step = 1)
+            dpg.add_input_int(default_value = 1000, label = 'max_work_space', tag = 'max_work_space', step = 500)
+            dpg.add_input_int(default_value = 20, label = 'max_agents_in_work', tag = 'max_agents_in_work', step = 1)
+            dpg.add_input_int(default_value = 750, label = 'max_night_space', tag = 'max_night_space', step = 500)
+            dpg.add_input_int(default_value = 30, label = 'max_agents_in_night', tag = 'max_agents_in_night', step = 1)
+            dpg.add_input_int(default_value = 10, label = 'min_recovery_time', tag = 'min_recovery_time', step = 1)
+            dpg.add_input_int(default_value = 3, label = 'min_incubation_time', tag = 'min_incubation_time', step = 1)
+            dpg.add_input_float(default_value = .020, label = 'rate_infection', tag = 'rate_infection', step = .001)
+            dpg.add_input_float(default_value = .001, label = 'rate_decease', tag = 'rate_decease', step = .001)
             dpg.add_button(label = 'Start', callback = self.btn_start_simulate, width = 250, height = 25, tag = 'btn_start')
             dpg.add_spacer(height = 5)
             dpg.add_text(default_value = 'Waiting start', tag = 'status_log')
@@ -87,14 +103,18 @@ class Gui_simulation():
         env = simulation.environment.Environment(
                         max_agents = self.max_agents, max_house_spaces = self.max_house_space,
                         max_work_spaces = self.max_work_space, max_night_spaces = self.max_night_space,
-                        dpg = dpg )
+                        max_agents_in_house = self.max_agents_in_house, max_agents_in_work = self.max_agents_in_work,
+                        max_agents_in_night = self.max_agents_in_night, dpg = dpg )
+
 
         env.populate()
         env.start_infection(1, skip_incubation=True)
 
         sim = simulation.simulation.Simulation(
-                        environment = env, base_infection_risk = self.base_infection_risk,
-                        decease_risk = self.decease_risk, gui_simulation = self)
+                        environment = env, rate_infection = self.rate_infection,
+                        rate_decease = self.rate_decease, gui_simulation = self,
+                        min_recovery_time = self.min_recovery_time, min_incubation_time = self.min_incubation_time
+                        )
         
         if self.first_execution == False : self.set_color_series()
         counter_steps_to_plot_new_series_data = 0
@@ -121,13 +141,18 @@ class Gui_simulation():
         dpg.set_value('status_log', status_log)
 
     def btn_reset_simulate(self):
-        dpg.set_value('days_to_simulate', 365)
+        dpg.set_value('days_to_simulate', 180)
         dpg.set_value('max_agents', 10000)
         dpg.set_value('max_house_space', 2500)
+        dpg.set_value('max_agents_in_house', 4)
         dpg.set_value('max_work_space', 1000)
+        dpg.set_value('max_agents_in_work', 20)
         dpg.set_value('max_night_space', 750)
-        dpg.set_value('base_infection_risk', .025)
-        dpg.set_value('decease_risk', .015)
+        dpg.set_value('max_agents_in_night', 30)
+        dpg.set_value('min_recovery_time', 10)
+        dpg.set_value('min_incubation_time', 3)
+        dpg.set_value('rate_infection', .020)
+        dpg.set_value('rate_decease', .001)
         dpg.delete_item('series_healthy')
         dpg.delete_item('series_infected')
         dpg.delete_item('series_incubating')
@@ -198,10 +223,15 @@ class Gui_simulation():
         self.days_to_simulate = int(dpg.get_value('days_to_simulate'))
         self.max_agents = dpg.get_value('max_agents')
         self.max_house_space = dpg.get_value('max_house_space')
+        self.max_agents_in_house = dpg.get_value('max_agents_in_house')
         self.max_work_space = dpg.get_value('max_work_space')
+        self.max_agents_in_work = dpg.get_value('max_agents_in_work')
         self.max_night_space = dpg.get_value('max_night_space')
-        self.base_infection_risk = dpg.get_value('base_infection_risk')
-        self.decease_risk = dpg.get_value('decease_risk')
+        self.max_agents_in_night = dpg.get_value('max_agents_in_night')
+        self.min_recovery_time = dpg.get_value('min_recovery_time')
+        self.min_incubation_time = dpg.get_value('min_incubation_time')
+        self.rate_infection = dpg.get_value('rate_infection')
+        self.rate_decease = dpg.get_value('rate_decease')
 
     def set_log_addr(self, addr):
         self.log_addr = addr

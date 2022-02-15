@@ -5,15 +5,15 @@ import os
 
 
 class Simulation:
-    def __init__(self, environment, base_infection_risk=.02, decease_risk=.005,
+    def __init__(self, environment, rate_infection=.002, rate_decease=.005,
                  min_incubation_time=2, min_recovery_time=7, start_time=0,
-                 gui_simulation=None, hospitalization_chance=.3):
+                 gui_simulation:object=None, hospitalization_chance=.3):
         self.time_position = start_time
         self.environment = environment
-        self.base_infection_risk = base_infection_risk
+        self.rate_infection = rate_infection
         self.min_incubation_time = min_incubation_time
         self.min_recovery_time = min_recovery_time
-        self.decease_risk = decease_risk
+        self.rate_decease = rate_decease
         self.logger = self.start_logger(gui_simulation)
         self.hospitalization_chance = hospitalization_chance
 
@@ -36,11 +36,11 @@ class Simulation:
         if not self.environment.is_populated:
             return "Environment Not Populated Yet."
         infected = 0
-        infected += self.environment.execute_house_routine(self.base_infection_risk)
-        infected += self.environment.execute_work_routine(self.base_infection_risk)
-        infected += self.environment.execute_night_routine(self.base_infection_risk)
+        infected += self.environment.execute_house_routine(self.rate_infection)
+        infected += self.environment.execute_work_routine(self.rate_infection)
+        infected += self.environment.execute_night_routine(self.rate_infection)
         recovered, deceased = self.environment.execute_end_of_day(
-            self.min_incubation_time, self.min_recovery_time, self.decease_risk,
+            self.min_incubation_time, self.min_recovery_time, self.rate_decease,
             self.hospitalization_chance)
         curr_status = self.get_status()
 
