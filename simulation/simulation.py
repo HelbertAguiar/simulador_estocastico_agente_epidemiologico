@@ -37,7 +37,7 @@ class Simulation:
             return "Environment Not Populated Yet."
         infected = 0
         infected += self.environment.execute_house_routine(self.base_infection_risk)
-        infected += self.environment.execute_night_routine(self.base_infection_risk)
+        infected += self.environment.execute_work_routine(self.base_infection_risk)
         infected += self.environment.execute_night_routine(self.base_infection_risk)
         recovered, deceased = self.environment.execute_end_of_day(
             self.min_incubation_time, self.min_recovery_time, self.decease_risk,
