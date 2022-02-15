@@ -1,6 +1,8 @@
-import numpy as np
+""" Module with class to handle process of environment of simulation"""
+
 from collections import Counter
 from random import random, sample
+import numpy as np
 from .space import Space
 from .agent import Agent
 
@@ -11,19 +13,19 @@ IMMUNE_STATUS = [1, 2, 3, 4, 5]
 
 
 class Environment:
-    def __init__(self, max_agents, max_house_spaces, max_work_spaces, max_night_spaces,
-                 max_agents_in_house=5, max_agents_in_work=20, max_agents_in_night=30,
+    """ Class with functions to Environment """
+    def __init__(self, max_agents, max_house_spaces, max_work_spaces,
+                 max_night_spaces, max_agents_in_house=5,
+                 max_agents_in_work=20, max_agents_in_night=30,
                  incubation_phase=True, dpg=None):
         self.dpg = dpg
         self.is_populated = False
         self.starting_agents = max_agents
         self.agents = []
         self.incubation_phase = incubation_phase
-        self.house_spaces = self._build_spaces("house", max_agents_in_house,
-                                               max_house_spaces)
+        self.house_spaces = self._build_spaces("house", max_agents_in_house, max_house_spaces)
         self.work_spaces = self._build_spaces("work", max_agents_in_work, max_work_spaces)
-        self.night_spaces = self._build_spaces("night", max_agents_in_night,
-                                               max_night_spaces)
+        self.night_spaces = self._build_spaces("night", max_agents_in_night, max_night_spaces)
         if max_house_spaces * max_agents_in_house < max_agents or \
                 max_work_spaces * max_agents_in_work < max_agents or \
                 max_night_spaces * max_agents_in_night < max_agents:
@@ -35,17 +37,20 @@ class Environment:
         return [Space(denomination, capacity) for _ in range(quantity)]
 
     def get_agents_ids_by_status(self, status):
+        """ get agents ids by status """
         return [agent.id for agent in self.agents if agent.status == status]
 
     def populate(self):
+        """ Populate environment """
         print("Populating Environment")
         if self.is_populated:
             return "Environment Already Populated."
-        # TODO: Avoid infinite loops and guarantee speed in space division
         for i in range(self.starting_agents):
             if i % 100 == 0:
                 print(f"Agents Created: {i}/{self.starting_agents}")
-                self.dpg.set_value('status_log', 'Processing.. (Creating individuals) - ' + f"Agents Created: {i}/{self.starting_agents}" )
+                self.dpg.set_value(
+                    'status_log', 'Processing.. (Creating individuals) - ' +
+                    f"Agents Created: {i}/{self.starting_agents}")
             agent = Agent(identification=i)
             while not agent.spaces_id["house"]:
                 house_id = np.random.randint(len(self.house_spaces))
@@ -60,15 +65,18 @@ class Environment:
         self.is_populated = True
 
     def start_infection(self, infected_agents, skip_incubation=False):
+        """ Starts infection """
         healthy_ids = sample(self.get_agents_ids_by_status(0), infected_agents)
         for i in healthy_ids:
             self.agents[i].infect(incubation_phase=(not skip_incubation))
 
     def get_status(self):
+        """ Ger counter of status"""
         status_list = [COVID_STAGES[agent.status] for agent in self.agents]
         return Counter(status_list)
 
     def execute_house_routine(self, rate_infection):
+        """ Introduce interaction on house among agents """
         infected = 0
         for house in self.house_spaces:
             for p1 in house.agents_id_list:
@@ -85,6 +93,7 @@ class Environment:
         return infected
 
     def execute_work_routine(self, rate_infection):
+        """ Introduce interaction on work among agents """
         infected = 0
         for work in self.work_spaces:
             for p1 in work.agents_id_list:
@@ -101,7 +110,7 @@ class Environment:
         return infected
 
     def execute_night_routine(self, rate_infection):
-        # TODO: Maybe the night routine could change some nights, or even not happen for some
+        """ Introduce interaction on night among agents """
         infected = 0
         for night in self.night_spaces:
             for p1 in night.agents_id_list:
@@ -119,13 +128,15 @@ class Environment:
 
     def execute_end_of_day(self, min_incubation_time, min_recovery_time, deceased_risk,
                            hosp_chance):
+        """ Calculate result of interaction on routines """
         recovered, deceased = 0, 0
         for agent in self.agents:
             if agent.status == 1 and agent.status_age >= min_incubation_time \
                     and np.random.normal() > 1.3:
                 agent.status, agent.status_age = (5, 0) if random() < hosp_chance else (2, 0)
             elif (agent.status == 2 and random() < (deceased_risk * (1+agent.risk_factor))) \
-                    or (agent.status == 5 and random() < ((deceased_risk)/2 * (1+agent.risk_factor))):
+                    or (agent.status == 5
+                        and random() < ((deceased_risk)/2 * (1+agent.risk_factor))):
                 agent.status, agent.status_age = 4, 0
                 deceased += 1
             elif agent.status in [2, 5] and agent.status_age >= min_recovery_time \

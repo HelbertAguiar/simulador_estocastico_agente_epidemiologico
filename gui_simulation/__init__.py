@@ -1,1 +1,1 @@
-from .gui_simulation import Gui_simulation
+from .gui_simulation import GuiSimulator

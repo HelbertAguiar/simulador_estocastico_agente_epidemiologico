@@ -1,7 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
-from gui_simulation import Gui_simulation
+from gui_simulation import GuiSimulator
 
 
-gui = Gui_simulation(height=1000, width=1200, maximize=True)
+gui = GuiSimulator(height=1000, width=1200, maximize=True)
 gui.render_screen_initial()
