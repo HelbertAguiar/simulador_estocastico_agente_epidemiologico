@@ -1,5 +1,4 @@
 import datetime
-import numpy as np
 from .logger import Logger
 import os
 
