@@ -1,10 +1,32 @@
-# SIMULADOR DOS EFEITOS DA COVID
+# Simulador de infecção epidemiologica da COVID
 
-## Descrição do Projeto
+Trata-se de um simulador epidemiologico simplificado focado na COVID-19. Foi utilizado uma generalização do modelo SEIRD (incluido o fator H referente ao agente com status hospitalizado) para modelagem do sistema.
 
-(...)
+    - [ ] SEIRD: Susceptible-Exposed-Infected-Recovered-Dead
+    - [x] SEIRDH: Susceptible-Exposed-Infected-Recovered-Dead-Hospitalized
 
-## Como usar
+## 🚀 Começando
 
-instale as dependencias listadas em requirements.txt
-(...)
+### 📋 Pré-requisitos
+
+Instale python, e em seguida, o gerenciador de dependencias pip
+
+### 🔧 Instalação Dependencias
+
+    pip install -r requirements.txt
+
+## 📦 Desenvolvimento
+
+Foi utilizados uma generalização do modelo SEIRD, embutindo uma probabilidade nas relações entre os agentes. É um modelo estocastico.
+
+## 🛠️ Construído com
+
+* [Python](https://www.python.org/) - Linguagem de programação
+* [DearPyGUI](https://dearpygui.readthedocs.io/en/latest/) - Construção da interface grafica
+
+## Referencias
+
+* <https://www.youtube.com/watch?v=gxAaO2rsdIs>
+* <https://ncase.me/covid-19/>
+* <http://www.im.ufrj.br/~coloquiomea/apresentacoes/almeida_2020.pdf>
+* <https://www.ufsm.br/coronavirus/simulador/>
