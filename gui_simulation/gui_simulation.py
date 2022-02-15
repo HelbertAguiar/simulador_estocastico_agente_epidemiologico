@@ -17,12 +17,17 @@ class Gui_simulation():
 
     # calculate values of each series on plot
     x_total_days = None
+    x_total_days_real = None
     y_total_healthy = None
     y_total_infected = None
     y_total_incubating = None
     y_total_deceased = None
     y_total_healed = None
     y_total_hospitalized = None
+
+    y_real_infected = None
+    y_ratio_real = None
+    population_bh = 2722000
 
     # parameters of condition initials fo environment
     max_agents = None
@@ -125,12 +130,16 @@ class Gui_simulation():
             if counter_steps_to_plot_new_series_data == step_days_to_plot_new_series_data:
                 counter_steps_to_plot_new_series_data = 0
                 self.read_log_file()
+                self.read_dataset()
+                self.normalize_y_real_infected()
                 self.plot_delete_series_data()
                 self.plot_add_series_data()
 
         print('Completed simulation..')
 
         self.read_log_file()
+        self.read_dataset()
+        self.normalize_y_real_infected()
         self.plot_delete_series_data()
         self.plot_add_series_data()
 
@@ -153,12 +162,13 @@ class Gui_simulation():
         dpg.set_value('min_incubation_time', 3)
         dpg.set_value('rate_infection', .020)
         dpg.set_value('rate_decease', .001)
-        dpg.delete_item('series_healthy')
-        dpg.delete_item('series_infected')
-        dpg.delete_item('series_incubating')
-        dpg.delete_item('series_hospitalized')
-        dpg.delete_item('series_deceased')
-        dpg.delete_item('series_healed')
+        if dpg.does_item_exist('series_healthy'): dpg.delete_item('series_healthy')
+        if dpg.does_item_exist('series_infected'): dpg.delete_item('series_infected')
+        if dpg.does_item_exist('series_incubating'): dpg.delete_item('series_incubating')
+        if dpg.does_item_exist('series_hospitalized'): dpg.delete_item('series_hospitalized')
+        if dpg.does_item_exist('series_deceased'): dpg.delete_item('series_deceased')
+        if dpg.does_item_exist('series_healed'): dpg.delete_item('series_healed')
+        if dpg.does_item_exist('series_real'): dpg.delete_item('series_real')
         dpg.set_value('status_log', 'Waiting start')
 
     def read_log_file(self):
@@ -169,6 +179,18 @@ class Gui_simulation():
                 self.y_total_deceased, self.y_total_healed, self.y_total_hospitalized \
                 = map(list, zip(*[self.split(row) for row in rows]))
 
+    def read_dataset(self):
+        with open("./dataset/covidbh.csv", newline = '') as csvfile:
+            rows = csv.DictReader(csvfile, delimiter = ';')
+            self.x_total_days_real, self.y_real_infected \
+                = map(list, zip(*[self.split_dataset(row) for row in rows]))
+    
+    def normalize_y_real_infected(self):
+        self.y_real_infected = list(map(self.apply_ratio, self.y_real_infected))
+
+    def apply_ratio(self, x):
+        return float(x * self.y_ratio_real)
+
     def plot_add_series_data(self):
         dpg.add_line_series(self.x_total_days, self.y_total_healthy, label = "healthy", parent = "y_axis", tag = "series_healthy")
         dpg.fit_axis_data("x_axis")
@@ -178,12 +200,14 @@ class Gui_simulation():
         dpg.add_line_series(self.x_total_days, self.y_total_hospitalized, label = "hospitalized", parent = "y_axis", tag = "series_hospitalized")
         dpg.add_line_series(self.x_total_days, self.y_total_deceased, label = "deceased", parent = "y_axis", tag = "series_deceased")
         dpg.add_line_series(self.x_total_days, self.y_total_healed, label = "healed", parent = "y_axis", tag = "series_healed")
+        dpg.add_line_series(self.x_total_days, self.y_real_infected, label = "real", parent = "y_axis", tag = "series_real")
         dpg.bind_item_theme("series_healthy", "green")
         dpg.bind_item_theme("series_infected", "yellow")
         dpg.bind_item_theme("series_incubating", "gray")
         dpg.bind_item_theme("series_hospitalized", "pink")
         dpg.bind_item_theme("series_deceased", "red")
         dpg.bind_item_theme("series_healed", "blue")
+        dpg.bind_item_theme("series_real", "white")
 
     def set_color_series(self):
         self.first_execution = True
@@ -211,6 +235,10 @@ class Gui_simulation():
             with dpg.theme_component(dpg.mvLineSeries):
                 dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 0, 255), category = dpg.mvThemeCat_Plots)
 
+        with dpg.theme(tag = "white"):
+            with dpg.theme_component(dpg.mvLineSeries):
+                dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 255, 255), category = dpg.mvThemeCat_Plots)
+
     def plot_delete_series_data(self):
         if dpg.does_item_exist('series_healthy'): dpg.delete_item('series_healthy')
         if dpg.does_item_exist('series_infected'): dpg.delete_item('series_infected')
@@ -218,6 +246,7 @@ class Gui_simulation():
         if dpg.does_item_exist('series_hospitalized'): dpg.delete_item('series_hospitalized')
         if dpg.does_item_exist('series_deceased'): dpg.delete_item('series_deceased')
         if dpg.does_item_exist('series_healed'): dpg.delete_item('series_healed')
+        if dpg.does_item_exist('series_real'): dpg.delete_item('series_real')
 
     def get_parameters_screen(self):
         self.days_to_simulate = int(dpg.get_value('days_to_simulate'))
@@ -232,6 +261,7 @@ class Gui_simulation():
         self.min_incubation_time = dpg.get_value('min_incubation_time')
         self.rate_infection = dpg.get_value('rate_infection')
         self.rate_decease = dpg.get_value('rate_decease')
+        self.y_ratio_real = float(self.max_agents) / float(self.population_bh)
 
     def set_log_addr(self, addr):
         self.log_addr = addr
@@ -241,6 +271,9 @@ class Gui_simulation():
                float(row['total_infected']), float(row['total_incubating']), \
                float(row['total_deceased']), float(row['total_healed']), \
                float(row['total_hospitalized'])
+
+    def split_dataset(self, row):
+        return float(row['day']), float(row['casesAmount']), \
 
 
 if __name__ == "__name__":
