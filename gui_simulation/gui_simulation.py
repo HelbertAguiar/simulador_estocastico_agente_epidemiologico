@@ -85,7 +85,7 @@ class Gui_simulation():
             dpg.add_separator()
             dpg.add_spacer(height = 5)
             dpg.add_plot(label = "Result of model of evolution of infection", 
-                                        height = self.height-500, width = self.width-100, tag = "plot", query = True)
+                                        height = self.height-570, width = self.width-100, tag = "plot", query = True)
             dpg.add_plot_legend(parent = "plot")
             dpg.add_plot_axis(dpg.mvXAxis, label = "Days", tag = "x_axis", parent = "plot")
             dpg.add_plot_axis(dpg.mvYAxis, label = "Population", tag = "y_axis", parent = "plot")
