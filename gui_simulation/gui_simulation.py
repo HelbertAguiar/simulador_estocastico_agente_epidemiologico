@@ -22,6 +22,7 @@ class Gui_simulation():
     y_total_incubating = None
     y_total_deceased = None
     y_total_healed = None
+    y_total_hospitalized = None
 
     # parameters of condition initials fo environment
     max_agents = None
@@ -130,6 +131,7 @@ class Gui_simulation():
         dpg.delete_item('series_healthy')
         dpg.delete_item('series_infected')
         dpg.delete_item('series_incubating')
+        dpg.delete_item('series_hospitalized')
         dpg.delete_item('series_deceased')
         dpg.delete_item('series_healed')
         dpg.set_value('status_log', 'Waiting start')
@@ -148,11 +150,13 @@ class Gui_simulation():
         dpg.fit_axis_data("y_axis")
         dpg.add_line_series(self.x_total_days, self.y_total_infected, label = "infected", parent = "y_axis", tag = "series_infected")
         dpg.add_line_series(self.x_total_days, self.y_total_incubating, label = "incubating", parent = "y_axis", tag = "series_incubating")
+        dpg.add_line_series(self.x_total_days, self.y_total_hospitalized, label = "hospitalized", parent = "y_axis", tag = "series_hospitalized")
         dpg.add_line_series(self.x_total_days, self.y_total_deceased, label = "deceased", parent = "y_axis", tag = "series_deceased")
         dpg.add_line_series(self.x_total_days, self.y_total_healed, label = "healed", parent = "y_axis", tag = "series_healed")
         dpg.bind_item_theme("series_healthy", "green")
         dpg.bind_item_theme("series_infected", "yellow")
         dpg.bind_item_theme("series_incubating", "gray")
+        dpg.bind_item_theme("series_hospitalized", "pink")
         dpg.bind_item_theme("series_deceased", "red")
         dpg.bind_item_theme("series_healed", "blue")
 
@@ -178,10 +182,15 @@ class Gui_simulation():
             with dpg.theme_component(dpg.mvLineSeries):
                 dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 255, 0), category = dpg.mvThemeCat_Plots)
 
+        with dpg.theme(tag = "pink"):
+            with dpg.theme_component(dpg.mvLineSeries):
+                dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 0, 255), category = dpg.mvThemeCat_Plots)
+
     def plot_delete_series_data(self):
         if dpg.does_item_exist('series_healthy'): dpg.delete_item('series_healthy')
         if dpg.does_item_exist('series_infected'): dpg.delete_item('series_infected')
         if dpg.does_item_exist('series_incubating'): dpg.delete_item('series_incubating')
+        if dpg.does_item_exist('series_hospitalized'): dpg.delete_item('series_hospitalized')
         if dpg.does_item_exist('series_deceased'): dpg.delete_item('series_deceased')
         if dpg.does_item_exist('series_healed'): dpg.delete_item('series_healed')
 
