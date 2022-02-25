@@ -21,8 +21,8 @@ Foi utilizados uma generalização do modelo SEIRD, embutindo uma probabilidade 
 
 ## 🛠️ Construído com
 
-* [Python](https://www.python.org/) - Linguagem de programação
-* [DearPyGUI](https://dearpygui.readthedocs.io/en/latest/) - Construção da interface grafica
+* [Python](https://www.python.org/) (v3.10) - Linguagem de programação
+* [DearPyGUI](https://dearpygui.readthedocs.io/en/latest/) (v1.3.1) - Construção da interface gráfica
 
 ## Referencias
 
